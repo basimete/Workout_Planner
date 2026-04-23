@@ -78,8 +78,6 @@ export function WeekMobile({
           const dayEvents = events.filter(e =>
             dateStr >= e.start_date && dateStr <= (e.end_date ?? e.start_date)
           )
-          const completedCount = daySessions.filter(s => s.status === 'completed').length
-
           // Only render groups for slots that actually have sessions
           const slotGroups = ALL_TIME_SLOTS
             .map(slot => ({ slot, sessions: daySessions.filter(s => s.time_slot === slot) }))
@@ -118,9 +116,9 @@ export function WeekMobile({
                     </p>
                     {isRest ? (
                       <p className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>Rest day</p>
-                    ) : daySessions.length > 0 ? (
-                      <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                        {completedCount}/{daySessions.length} done
+                    ) : !isExpanded && daySessions.length > 0 ? (
+                      <p className="text-xs truncate" style={{ color: 'var(--color-text)' }}>
+                        {daySessions.map(s => s.activity_name).join(', ')}
                       </p>
                     ) : null}
                   </div>
