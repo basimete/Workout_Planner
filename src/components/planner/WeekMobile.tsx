@@ -4,16 +4,15 @@ import { useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, Moon, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { ActivityChip } from './ActivityChip'
 import { formatDayFull, isToday, toISODate } from '@/lib/dates'
-import { TIME_SLOT_LABELS } from '@/types'
-import type { PlannedSession, Event, TimeSlot } from '@/types'
+import { TIME_SLOT_LABELS, ALL_TIME_SLOTS } from '@/types'
+import type { PlannedSession, Event } from '@/types'
 
 interface WeekMobileProps {
   weekDays: Date[]
   sessions: PlannedSession[]
   events: Event[]
-  visibleSlots: TimeSlot[]
   restDays: Set<string>
-  onAdd: (date: string, slot: TimeSlot) => void
+  onAdd: (date: string) => void
   onMarkDone: (id: string) => void
   onUndo: (id: string) => void
   onRemove: (id: string) => void
@@ -21,7 +20,7 @@ interface WeekMobileProps {
 }
 
 export function WeekMobile({
-  weekDays, sessions, events, visibleSlots, restDays,
+  weekDays, sessions, events, restDays,
   onAdd, onMarkDone, onUndo, onRemove, onToggleRest,
 }: WeekMobileProps) {
   const allDates = weekDays.map(d => toISODate(d))
@@ -39,13 +38,8 @@ export function WeekMobile({
     })
   }
 
-  function expandAll() {
-    setExpanded(new Set(allDates))
-  }
-
-  function collapseAll() {
-    setExpanded(new Set())
-  }
+  function expandAll() { setExpanded(new Set(allDates)) }
+  function collapseAll() { setExpanded(new Set()) }
 
   const allExpanded = allDates.every(d => expanded.has(d))
   const noneExpanded = allDates.every(d => !expanded.has(d))
@@ -81,8 +75,15 @@ export function WeekMobile({
           const isExpanded = expanded.has(dateStr)
           const isRest = restDays.has(dateStr)
           const daySessions = sessions.filter(s => s.date === dateStr)
-          const dayEvents = events.filter(e => dateStr >= e.start_date && dateStr <= (e.end_date ?? e.start_date))
+          const dayEvents = events.filter(e =>
+            dateStr >= e.start_date && dateStr <= (e.end_date ?? e.start_date)
+          )
           const completedCount = daySessions.filter(s => s.status === 'completed').length
+
+          // Only render groups for slots that actually have sessions
+          const slotGroups = ALL_TIME_SLOTS
+            .map(slot => ({ slot, sessions: daySessions.filter(s => s.time_slot === slot) }))
+            .filter(g => g.sessions.length > 0)
 
           return (
             <div
@@ -107,9 +108,12 @@ export function WeekMobile({
                     {day.getDate()}
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-semibold" style={{
-                      color: isRest ? 'var(--color-muted)' : today ? '#84cc16' : 'var(--color-text)',
-                    }}>
+                    <p
+                      className="text-sm font-semibold"
+                      style={{
+                        color: isRest ? 'var(--color-muted)' : today ? '#84cc16' : 'var(--color-text)',
+                      }}
+                    >
                       {formatDayFull(day)}
                     </p>
                     {isRest ? (
@@ -153,7 +157,7 @@ export function WeekMobile({
                 )}
               </div>
 
-              {/* Slots — label above, chips + add inline */}
+              {/* Expanded content — only renders slots that have sessions */}
               {isExpanded && !isRest && (
                 <div className="px-4 pb-4 flex flex-col gap-3">
                   {/* Event banners */}
@@ -164,44 +168,45 @@ export function WeekMobile({
                       style={{ backgroundColor: '#84cc1620', border: '1px solid #84cc1640' }}
                     >
                       <p className="text-xs font-semibold" style={{ color: '#166534' }}>{evt.name}</p>
-                      {evt.notes && <p className="text-[10px] mt-0.5" style={{ color: '#15803d' }}>{evt.notes}</p>}
+                      {evt.notes && (
+                        <p className="text-[10px] mt-0.5" style={{ color: '#15803d' }}>{evt.notes}</p>
+                      )}
                     </div>
                   ))}
 
-                  {/* Each slot: label above, chips + add button in a row */}
-                  {visibleSlots.map(slot => {
-                    const slotSessions = daySessions.filter(s => s.time_slot === slot)
-                    return (
-                      <div key={slot} className="flex flex-col gap-1">
-                        {/* Slot label */}
-                        <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-muted)' }}>
-                          {TIME_SLOT_LABELS[slot]}
-                        </p>
-
-                        {/* Chips + add button in a wrapping row */}
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {slotSessions.map(s => (
-                            <div key={s.id} className="min-w-0 max-w-[220px]">
-                              <ActivityChip
-                                session={s}
-                                onMarkDone={onMarkDone}
-                                onUndo={onUndo}
-                                onRemove={onRemove}
-                              />
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => onAdd(dateStr, slot)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] flex-shrink-0"
-                            style={{ color: 'var(--color-muted)' }}
-                          >
-                            <Plus size={11} />
-                            Add
-                          </button>
-                        </div>
+                  {/* Slot groups — only slots with sessions are shown */}
+                  {slotGroups.map(({ slot, sessions: slotSessions }) => (
+                    <div key={slot} className="flex flex-col gap-1">
+                      <p
+                        className="text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--color-muted)' }}
+                      >
+                        {TIME_SLOT_LABELS[slot]}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {slotSessions.map(s => (
+                          <div key={s.id} className="min-w-0 max-w-[220px]">
+                            <ActivityChip
+                              session={s}
+                              onMarkDone={onMarkDone}
+                              onUndo={onUndo}
+                              onRemove={onRemove}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
+
+                  {/* Add button — always visible at the bottom */}
+                  <button
+                    onClick={() => onAdd(dateStr)}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] self-start"
+                    style={{ color: 'var(--color-muted)' }}
+                  >
+                    <Plus size={11} />
+                    Add activity
+                  </button>
                 </div>
               )}
             </div>

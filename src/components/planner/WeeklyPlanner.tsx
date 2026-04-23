@@ -6,12 +6,13 @@ import { useWeekNav } from '@/hooks/useWeekNav'
 import { usePlanner } from '@/hooks/usePlanner'
 import { useEvents } from '@/hooks/useEvents'
 import { useSettings } from '@/hooks/useSettings'
-import { getWeekDays, toISODate } from '@/lib/dates'
+import { getWeekDays } from '@/lib/dates'
 import { WeekNav } from './WeekNav'
 import { CompletionBar } from './CompletionBar'
 import { WeekGrid } from './WeekGrid'
 import { WeekMobile } from './WeekMobile'
 import { ActivityPicker } from './ActivityPicker'
+import { TimeSlotPicker } from './TimeSlotPicker'
 import { AddEventModal } from './AddEventModal'
 import { Button } from '@/components/ui/Button'
 import type { Activity, TimeSlot } from '@/types'
@@ -22,31 +23,53 @@ export function WeeklyPlanner() {
   const { addEvent } = useEvents()
   const { visibleSlots } = useSettings()
 
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const [activityPickerOpen, setActivityPickerOpen] = useState(false)
+  const [slotPickerOpen, setSlotPickerOpen] = useState(false)
   const [eventModalOpen, setEventModalOpen] = useState(false)
-  const [pendingCell, setPendingCell] = useState<{ date: string; slot: TimeSlot } | null>(null)
+  const [pendingDate, setPendingDate] = useState<string | null>(null)
+  const [pendingActivity, setPendingActivity] = useState<Activity | null>(null)
 
   const weekDays = getWeekDays(monday)
 
-  function handleAddToSlot(date: string, slot: TimeSlot) {
-    setPendingCell({ date, slot })
-    setPickerOpen(true)
+  // Step 1: user taps + Add on a day
+  function handleAddToDay(date: string) {
+    setPendingDate(date)
+    setActivityPickerOpen(true)
   }
 
-  async function handleActivitySelect(activity: Activity) {
-    if (!pendingCell) return
-    const cat = { name: activity.category?.name ?? '', color: activity.category?.color ?? '#84cc16' }
-    // Category-only selection has id === category_id; pass null so the FK constraint isn't violated
+  // Step 2a: user picks an activity → open slot picker
+  function handleActivitySelect(activity: Activity) {
+    setPendingActivity(activity)
+    setActivityPickerOpen(false)
+    setSlotPickerOpen(true)
+  }
+
+  // Step 2b: user picks a time slot → save the session
+  async function handleSlotSelect(slot: TimeSlot) {
+    if (!pendingDate || !pendingActivity) return
+    const activity = pendingActivity
+    const cat = {
+      name: activity.category?.name ?? '',
+      color: activity.category?.color ?? '#84cc16',
+    }
     const activityId = activity.id === activity.category_id ? null : activity.id
-    await addSession(
-      activityId,
-      activity.name,
-      cat.name,
-      cat.color,
-      pendingCell.date,
-      pendingCell.slot
-    )
-    setPendingCell(null)
+    await addSession(activityId, activity.name, cat.name, cat.color, pendingDate, slot)
+    setPendingDate(null)
+    setPendingActivity(null)
+    setSlotPickerOpen(false)
+  }
+
+  function handleCancelActivityPicker() {
+    setActivityPickerOpen(false)
+    setPendingDate(null)
+  }
+
+  function handleCancelSlotPicker() {
+    setSlotPickerOpen(false)
+    setPendingActivity(null)
+    // Keep pendingDate — user can re-open activity picker if they want
+    // but simpler to reset fully:
+    setPendingDate(null)
   }
 
   async function handleAddEvent(name: string, startDate: string, endDate: string | null, notes: string | null) {
@@ -58,9 +81,8 @@ export function WeeklyPlanner() {
     weekDays,
     sessions,
     events,
-    visibleSlots,
     restDays,
-    onAdd: handleAddToSlot,
+    onAdd: handleAddToDay,
     onMarkDone: markDone,
     onUndo: undoDone,
     onRemove: removeSession,
@@ -95,7 +117,10 @@ export function WeeklyPlanner() {
       {/* Loading */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#84cc16', borderTopColor: 'transparent' }} />
+          <div
+            className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+            style={{ borderColor: '#84cc16', borderTopColor: 'transparent' }}
+          />
         </div>
       ) : (
         <>
@@ -111,11 +136,19 @@ export function WeeklyPlanner() {
         </>
       )}
 
-      {/* Activity picker */}
+      {/* Step 1: Activity picker */}
       <ActivityPicker
-        open={pickerOpen}
-        onClose={() => { setPickerOpen(false); setPendingCell(null) }}
+        open={activityPickerOpen}
+        onClose={handleCancelActivityPicker}
         onSelect={handleActivitySelect}
+      />
+
+      {/* Step 2: Time slot picker */}
+      <TimeSlotPicker
+        open={slotPickerOpen}
+        onClose={handleCancelSlotPicker}
+        onSelect={handleSlotSelect}
+        visibleSlots={visibleSlots}
       />
 
       {/* Add event modal */}
