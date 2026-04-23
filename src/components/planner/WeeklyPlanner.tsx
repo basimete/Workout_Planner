@@ -61,14 +61,14 @@ export function WeeklyPlanner() {
 
   function handleCancelActivityPicker() {
     setActivityPickerOpen(false)
-    setPendingDate(null)
+    // Don't reset pendingDate here — ActivityPicker calls onClose() after onSelect(),
+    // which would null out pendingDate before the slot picker can use it.
+    // Reset happens in handleSlotSelect / handleCancelSlotPicker instead.
   }
 
   function handleCancelSlotPicker() {
     setSlotPickerOpen(false)
     setPendingActivity(null)
-    // Keep pendingDate — user can re-open activity picker if they want
-    // but simpler to reset fully:
     setPendingDate(null)
   }
 
