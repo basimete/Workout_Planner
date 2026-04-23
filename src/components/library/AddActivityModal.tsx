@@ -113,12 +113,12 @@ export function AddActivityModal({
                 onChange={e => setActivityName(e.target.value)}
                 placeholder="e.g. Easy Run"
                 required
-                autoFocus
-                className="w-full rounded-xl px-4 py-2.5 text-sm border outline-none"
+                className="w-full rounded-xl px-4 py-2.5 border outline-none"
                 style={{
                   backgroundColor: 'var(--color-surface-2)',
                   borderColor: 'var(--color-border)',
                   color: 'var(--color-text)',
+                  fontSize: '16px',
                 }}
               />
             </div>
@@ -135,12 +135,12 @@ export function AddActivityModal({
                 onChange={e => setCategoryName(e.target.value)}
                 placeholder="e.g. Pilates"
                 required
-                autoFocus
-                className="w-full rounded-xl px-4 py-2.5 text-sm border outline-none"
+                className="w-full rounded-xl px-4 py-2.5 border outline-none"
                 style={{
                   backgroundColor: 'var(--color-surface-2)',
                   borderColor: 'var(--color-border)',
                   color: 'var(--color-text)',
+                  fontSize: '16px',
                 }}
               />
             </div>

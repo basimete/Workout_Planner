@@ -62,7 +62,7 @@ export function usePlanner(monday: Date) {
   }
 
   async function addSession(
-    activityId: string,
+    activityId: string | null,
     activityName: string,
     categoryName: string,
     categoryColor: string,

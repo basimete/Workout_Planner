@@ -76,7 +76,7 @@ export function ActivityChip({ session, onMarkDone, onUndo, onRemove }: Activity
       <button
         onClick={e => { e.stopPropagation(); onRemove(session.id) }}
         aria-label="Remove"
-        className="flex-shrink-0 opacity-0 group-hover/chip:opacity-100 transition-opacity p-0.5 rounded hover:text-red-400"
+        className="flex-shrink-0 opacity-40 group-hover/chip:opacity-100 transition-opacity p-0.5 rounded hover:text-red-400"
         style={{ color: 'var(--color-muted)' }}
       >
         <X size={12} />

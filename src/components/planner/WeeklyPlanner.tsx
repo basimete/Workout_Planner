@@ -36,8 +36,10 @@ export function WeeklyPlanner() {
   async function handleActivitySelect(activity: Activity) {
     if (!pendingCell) return
     const cat = { name: activity.category?.name ?? '', color: activity.category?.color ?? '#84cc16' }
+    // Category-only selection has id === category_id; pass null so the FK constraint isn't violated
+    const activityId = activity.id === activity.category_id ? null : activity.id
     await addSession(
-      activity.id,
+      activityId,
       activity.name,
       cat.name,
       cat.color,
