@@ -22,7 +22,10 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
       a.name.toLowerCase().includes(query.toLowerCase()) ||
       cat.name.toLowerCase().includes(query.toLowerCase())
     ),
-  })).filter(cat => cat.activities.length > 0)
+  })).filter(cat =>
+    cat.activities.length > 0 ||
+    cat.name.toLowerCase().includes(query.toLowerCase())
+  )
 
   function handleSelect(activity: Activity) {
     onSelect(activity)
@@ -30,9 +33,20 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
     onClose()
   }
 
+  function handleSelectCategory(cat: typeof categories[number]) {
+    // Treat the category itself as a selectable activity
+    handleSelect({
+      id: cat.id,
+      category_id: cat.id,
+      name: cat.name,
+      user_id: null,
+      category: { id: cat.id, name: cat.name, color: cat.color, user_id: null },
+    })
+  }
+
   return (
     <BottomSheet open={open} onClose={onClose} title="Pick an activity">
-      {/* Search */}
+      {/* Search — font-size 16px prevents iOS zoom */}
       <div
         className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4"
         style={{ backgroundColor: 'var(--color-surface-2)' }}
@@ -44,8 +58,8 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
           onChange={e => setQuery(e.target.value)}
           placeholder="Search activities…"
           autoFocus
-          className="flex-1 bg-transparent text-sm outline-none"
-          style={{ color: 'var(--color-text)' }}
+          className="flex-1 bg-transparent outline-none"
+          style={{ color: 'var(--color-text)', fontSize: '16px' }}
         />
       </div>
 
@@ -61,12 +75,18 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
         <div className="flex flex-col gap-4">
           {filtered.map(cat => (
             <div key={cat.id}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+              {/* Category header — tappable to select the category itself */}
+              <button
+                onClick={() => handleSelectCategory(cat)}
+                className="flex items-center gap-2 mb-2 w-full rounded-lg px-2 py-1 -mx-2 text-left hover:opacity-70 transition-opacity"
+              >
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
                 <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-muted)' }}>
                   {cat.name}
                 </span>
-              </div>
+              </button>
+
+              {/* Individual activities */}
               <div className="flex flex-col gap-1.5">
                 {cat.activities.map(act => (
                   <button
