@@ -110,36 +110,53 @@ export function WeekGrid({
                       <EventBanner key={evt.id} event={evt} />
                     ))}
 
-                    {slotGroups.map(({ slot, sessions: slotSessions }) => (
-                      <div key={slot}>
-                        <p
-                          className="text-[10px] font-semibold uppercase tracking-wide mb-1"
-                          style={{ color: 'var(--color-muted)' }}
-                        >
-                          {TIME_SLOT_LABELS[slot]}
-                        </p>
-                        <div className="flex flex-col gap-1">
-                          {slotSessions.map(s => (
-                            <ActivityChip
-                              key={s.id}
-                              session={s}
-                              onMarkDone={onMarkDone}
-                              onUndo={onUndo}
-                              onRemove={onRemove}
-                            />
-                          ))}
+                    {slotGroups.map(({ slot, sessions: slotSessions }, idx) => {
+                      const isLast = idx === slotGroups.length - 1
+                      return (
+                        <div key={slot}>
+                          <p
+                            className="text-[10px] font-semibold uppercase tracking-wide mb-1"
+                            style={{ color: 'var(--color-muted)' }}
+                          >
+                            {TIME_SLOT_LABELS[slot]}
+                          </p>
+                          <div className="flex flex-col gap-1">
+                            {slotSessions.map(s => (
+                              <ActivityChip
+                                key={s.id}
+                                session={s}
+                                onMarkDone={onMarkDone}
+                                onUndo={onUndo}
+                                onRemove={onRemove}
+                              />
+                            ))}
+                            {/* Add button inline after the last chip in the last group */}
+                            {isLast && (
+                              <button
+                                onClick={() => onAdd(dateStr)}
+                                className="flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] self-start transition-opacity hover:opacity-70"
+                                style={{ color: 'var(--color-muted)' }}
+                              >
+                                <Plus size={10} />
+                                Add
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
 
-                    <button
-                      onClick={() => onAdd(dateStr)}
-                      className="flex items-center gap-1 w-full justify-center py-1 rounded-lg text-[11px] transition-opacity hover:opacity-70"
-                      style={{ color: 'var(--color-muted)' }}
-                    >
-                      <Plus size={11} />
-                      Add
-                    </button>
+                    {/* Standalone add button only when day is empty */}
+                    {slotGroups.length === 0 && (
+                      <button
+                        onClick={() => onAdd(dateStr)}
+                        className="flex items-center gap-1 w-full justify-center py-1 rounded-lg text-[11px] transition-opacity hover:opacity-70"
+                        style={{ color: 'var(--color-muted)' }}
+                      >
+                        <Plus size={11} />
+                        Add
+                      </button>
+                    )}
                   </>
                 )}
               </div>

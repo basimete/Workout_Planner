@@ -175,38 +175,54 @@ export function WeekMobile({
                   ))}
 
                   {/* Slot groups — only slots with sessions are shown */}
-                  {slotGroups.map(({ slot, sessions: slotSessions }) => (
-                    <div key={slot} className="flex flex-col gap-1">
-                      <p
-                        className="text-[10px] font-semibold uppercase tracking-wide"
-                        style={{ color: 'var(--color-muted)' }}
-                      >
-                        {TIME_SLOT_LABELS[slot]}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {slotSessions.map(s => (
-                          <div key={s.id} className="min-w-0 max-w-[220px]">
-                            <ActivityChip
-                              session={s}
-                              onMarkDone={onMarkDone}
-                              onUndo={onUndo}
-                              onRemove={onRemove}
-                            />
-                          </div>
-                        ))}
+                  {slotGroups.map(({ slot, sessions: slotSessions }, idx) => {
+                    const isLast = idx === slotGroups.length - 1
+                    return (
+                      <div key={slot} className="flex flex-col gap-1">
+                        <p
+                          className="text-[10px] font-semibold uppercase tracking-wide"
+                          style={{ color: 'var(--color-muted)' }}
+                        >
+                          {TIME_SLOT_LABELS[slot]}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {slotSessions.map(s => (
+                            <div key={s.id} className="min-w-0 max-w-[220px]">
+                              <ActivityChip
+                                session={s}
+                                onMarkDone={onMarkDone}
+                                onUndo={onUndo}
+                                onRemove={onRemove}
+                              />
+                            </div>
+                          ))}
+                          {/* Add button inline with chips on the last group */}
+                          {isLast && (
+                            <button
+                              onClick={() => onAdd(dateStr)}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] flex-shrink-0"
+                              style={{ color: 'var(--color-muted)' }}
+                            >
+                              <Plus size={11} />
+                              Add
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
 
-                  {/* Add button — always visible at the bottom */}
-                  <button
-                    onClick={() => onAdd(dateStr)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] self-start"
-                    style={{ color: 'var(--color-muted)' }}
-                  >
-                    <Plus size={11} />
-                    Add activity
-                  </button>
+                  {/* Standalone add button only when day is empty */}
+                  {slotGroups.length === 0 && (
+                    <button
+                      onClick={() => onAdd(dateStr)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] self-start"
+                      style={{ color: 'var(--color-muted)' }}
+                    >
+                      <Plus size={11} />
+                      Add activity
+                    </button>
+                  )}
                 </div>
               )}
             </div>
