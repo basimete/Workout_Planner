@@ -34,7 +34,6 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
   }
 
   function handleSelectCategory(cat: typeof categories[number]) {
-    // Treat the category itself as a selectable activity
     handleSelect({
       id: cat.id,
       category_id: cat.id,
@@ -46,7 +45,7 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
 
   return (
     <BottomSheet open={open} onClose={onClose} title="Pick an activity">
-      {/* Search — font-size 16px prevents iOS zoom */}
+      {/* Search — no autoFocus so keyboard doesn't open immediately */}
       <div
         className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4"
         style={{ backgroundColor: 'var(--color-surface-2)' }}
@@ -57,7 +56,6 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search activities…"
-          autoFocus
           className="flex-1 bg-transparent outline-none"
           style={{ color: 'var(--color-text)', fontSize: '16px' }}
         />
@@ -75,13 +73,15 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
         <div className="flex flex-col gap-4">
           {filtered.map(cat => (
             <div key={cat.id}>
-              {/* Category header — tappable to select the category itself */}
+              {/* Category row — full button, tappable to select category itself */}
               <button
+                type="button"
                 onClick={() => handleSelectCategory(cat)}
-                className="flex items-center gap-2 mb-2 w-full rounded-lg px-2 py-1 -mx-2 text-left hover:opacity-70 transition-opacity"
+                className="flex items-center gap-2 w-full rounded-xl px-3 py-2.5 mb-1.5 text-left transition-opacity active:opacity-60"
+                style={{ backgroundColor: `${cat.color}18` }}
               >
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-muted)' }}>
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: cat.color }}>
                   {cat.name}
                 </span>
               </button>
@@ -91,8 +91,9 @@ export function ActivityPicker({ open, onClose, onSelect }: ActivityPickerProps)
                 {cat.activities.map(act => (
                   <button
                     key={act.id}
+                    type="button"
                     onClick={() => handleSelect(act)}
-                    className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-left transition-opacity hover:opacity-70"
+                    className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-left transition-opacity active:opacity-60"
                     style={{ backgroundColor: 'var(--color-surface-2)' }}
                   >
                     <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
